@@ -20,11 +20,25 @@
   },
   "keywords": [
     "mcp",
+    "model-context-protocol",
     "pylon",
     "knowledge-base",
-    "api"
+    "api",
+    "claude"
   ],
+  "author": "Justin Hein <justin@onboarded.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inheinsight/pylon-kb-mcp.git"
+  },
+  "homepage": "https://github.com/inheinsight/pylon-kb-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/inheinsight/pylon-kb-mcp/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
