@@ -1,0 +1,9 @@
+{
+  "name": "pylon-kb",
+  "version": "1.0.0",
+  "description": "MCP server covering Pylon's Knowledge Base API: knowledge bases, collections, articles (full CRUD), and route redirects. Use this to help create and maintain your Pylon knowledge base with Claude.",
+  "author": {
+    "name": "Justin Hein",
+    "email": "justin@onboarded.com"
+  }
+}

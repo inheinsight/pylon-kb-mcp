@@ -45,14 +45,37 @@ PYLON_API_TOKEN=your_token_here npm run dev
 
 ## Using with Claude Code / Cowork
 
-Add to your MCP config (e.g. `~/.claude/mcp.json` or the cowork plugin config):
+### Option A — Install as a Claude Code plugin (recommended)
+
+This repo ships a `.claude-plugin/marketplace.json`, so it works as a single-plugin marketplace. From a terminal (or inside a Cowork session):
+
+```bash
+claude plugin marketplace add https://github.com/inheinsight/pylon-kb-mcp.git
+claude plugin install pylon-kb@pylon-kb-mcp
+```
+
+Then set your token (the plugin's `.mcp.json` reads it via `${PYLON_API_TOKEN}`):
+
+```bash
+export PYLON_API_TOKEN=your_token_here
+```
+
+### Option B — Wire up as a raw MCP server
+
+```bash
+claude mcp add -s user pylon-kb -e "PYLON_API_TOKEN=your_token_here" -- npx -y pylon-kb-mcp-server
+```
+
+### Option C — Manual JSON config
+
+Add to your MCP config (e.g. `~/.claude.json` under `mcpServers`):
 
 ```json
 {
   "mcpServers": {
     "pylon-kb": {
-      "command": "node",
-      "args": ["/absolute/path/to/pylon-kb-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "pylon-kb-mcp-server"],
       "env": {
         "PYLON_API_TOKEN": "your_token_here"
       }

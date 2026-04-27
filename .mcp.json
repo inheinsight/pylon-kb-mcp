@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pylon-kb": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "pylon-kb-mcp-server"],
+      "env": {
+        "PYLON_API_TOKEN": "${PYLON_API_TOKEN}"
+      }
+    }
+  }
+}

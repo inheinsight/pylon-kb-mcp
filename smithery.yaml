@@ -1,0 +1,16 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - pylonApiToken
+    properties:
+      pylonApiToken:
+        type: string
+        description: Pylon API bearer token. Used to authenticate against the Pylon Knowledge Base API.
+        secret: true
+  commandFunction: |-
+    config => ({ command: 'node', args: ['dist/index.js'], env: { PYLON_API_TOKEN: config.pylonApiToken } })

@@ -1,0 +1,13 @@
+{
+  "name": "pylon-kb-mcp",
+  "owner": {
+    "name": "Justin Hein"
+  },
+  "plugins": [
+    {
+      "name": "pylon-kb",
+      "source": "./",
+      "description": "Pylon Knowledge Base MCP server: manage knowledge bases, collections, and articles (full CRUD) plus route redirects via Pylon's API."
+    }
+  ]
+}
