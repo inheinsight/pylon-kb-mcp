@@ -1,0 +1,11 @@
+name = "pylon-kb-mcp"
+main = "src/worker.ts"
+compatibility_date = "2024-09-23"
+account_id = "95395f7c1d8292af713ec2bc73b9e4b9"
+
+[observability]
+enabled = true
+
+# Secrets are set out-of-band via `wrangler secret put`:
+#   PYLON_API_TOKEN     — Pylon bearer token shared by the team
+#   MCP_CLIENT_SECRET   — random string clients (Cowork, Claude Code) must present

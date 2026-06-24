@@ -19,6 +19,8 @@ Docs reference: https://docs.usepylon.com/pylon-docs/developer/api/api-reference
 | `pylon_kb_update_article` | `PATCH /knowledge-bases/{id}/articles/{article_id}` |
 | `pylon_kb_delete_article` | `DELETE /knowledge-bases/{id}/articles/{article_id}` |
 | `pylon_kb_create_route_redirect` | `POST /knowledge-bases/{id}/route-redirects` |
+| `pylon_kb_capture_screenshot` | (local only) Captures + uploads to `POST /attachments` |
+| `pylon_kb_capture_flow` | (local only) Multi-step capture + upload |
 
 ## Install
 
@@ -83,6 +85,59 @@ Add to your MCP config (e.g. `~/.claude.json` under `mcpServers`):
   }
 }
 ```
+
+## Screenshot capture (local stdio only)
+
+The `pylon_kb_capture_screenshot` and `pylon_kb_capture_flow` tools drive a local
+Playwright Chromium instance to log into the Onboarded dashboard, capture
+screenshots (optionally with arrows / highlights / circles drawn on the page),
+and upload them to Pylon's `/attachments` endpoint. The returned URL is
+embeddable directly in `body_html` as `<img src="...">`, so a typical agent
+flow is: capture → embed in body_html → call `pylon_kb_create_article` /
+`pylon_kb_update_article`.
+
+These tools are only registered in the local stdio runtime — the Cloudflare
+Worker entry can't run Playwright and will return a clear error if called.
+
+### One-time setup
+
+```bash
+npm install
+npx playwright install chromium
+```
+
+### Configure
+
+Add three new env vars to your existing `PYLON_API_TOKEN` setup:
+
+```bash
+export ONBOARDED_DASHBOARD_URL=https://app.onboarded.com
+export ONBOARDED_LOGIN_EMAIL=...
+export ONBOARDED_LOGIN_PASSWORD=...
+```
+
+Optional overrides:
+
+- `PLAYWRIGHT_USER_DATA_DIR` — where Chromium stores cookies between runs
+  (default `~/.pylon-kb-mcp/chromium-profile`).
+- `PLAYWRIGHT_HEADLESS=false` — launch Chromium headed for debugging.
+
+If any of the three Onboarded vars are missing, the screenshot tools log a
+"DISABLED" notice on startup and the existing 11 KB tools continue to work.
+
+### Login flow
+
+The login flow lives in [src/browser/login.ts](src/browser/login.ts) and is
+deliberately a single short file. If the dashboard's auth UI changes, update
+the selectors there and rebuild.
+
+### Annotations
+
+`pylon_kb_capture_screenshot` accepts an `annotations[]` array. Each annotation
+has a `kind` (`arrow` | `highlight` | `circle`) and either a `selector` or
+absolute `coords`. Optional `label` text renders above an arrow. The browser
+draws the annotations as SVG / DOM overlays before screenshotting, so output
+PNGs are already composited — no separate image-processing step is needed.
 
 ## License
 
