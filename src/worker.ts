@@ -16,11 +16,17 @@
 import { PylonKBClient } from './pylon-kb-client.js';
 import { tools } from './tools.js';
 import { executeTool } from './handler.js';
+import { jwtVerify, createRemoteJWKSet, type JWTVerifyGetKey } from 'jose';
 
 interface Env {
   PYLON_API_TOKEN: string;
   MCP_CLIENT_SECRET: string;
   PYLON_BASE_URL?: string;
+  // Cloudflare Access (managed OAuth) — set once Access fronts this hostname.
+  // ACCESS_AUD: the Access application's Audience (AUD) tag.
+  // ACCESS_TEAM_DOMAIN: e.g. https://onboardedz.cloudflareaccess.com
+  ACCESS_AUD?: string;
+  ACCESS_TEAM_DOMAIN?: string;
 }
 
 interface JsonRpcRequest {
@@ -145,6 +151,34 @@ function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
+// Cloudflare Access (managed OAuth) auth. When Access fronts this hostname it
+// injects a signed `Cf-Access-Jwt-Assertion` header. We validate it against the
+// team's public keys and the application's AUD tag. Disabled (returns false)
+// until ACCESS_AUD is configured, so this is safe to ship before Access is live.
+let accessJwks: JWTVerifyGetKey | undefined;
+let accessJwksDomain: string | undefined;
+
+async function isAccessAuthorized(request: Request, env: Env): Promise<boolean> {
+  const aud = env.ACCESS_AUD;
+  if (!aud) return false; // Access not configured yet — fall back to the shared secret.
+
+  const token = request.headers.get('cf-access-jwt-assertion');
+  if (!token) return false;
+
+  const teamDomain = (env.ACCESS_TEAM_DOMAIN ?? 'https://onboardedz.cloudflareaccess.com').replace(/\/$/, '');
+  if (!accessJwks || accessJwksDomain !== teamDomain) {
+    accessJwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+    accessJwksDomain = teamDomain;
+  }
+
+  try {
+    await jwtVerify(token, accessJwks, { issuer: teamDomain, audience: aud });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function handleRpc(req: JsonRpcRequest, env: Env): Promise<JsonRpcSuccess | JsonRpcError | null> {
   const id = req.id ?? null;
 
@@ -226,8 +260,10 @@ export default {
       return errorResponse(404, 'Not Found');
     }
 
-    if (!isAuthorized(request, url, env)) {
-      return errorResponse(401, 'Unauthorized — provide MCP_CLIENT_SECRET via `Authorization: Bearer <secret>` header or `/mcp/<secret>` path.');
+    // Authorized if EITHER Cloudflare Access vouched for the request (managed
+    // OAuth, validated via the injected JWT) OR the shared secret is presented.
+    if (!(await isAccessAuthorized(request, env)) && !isAuthorized(request, url, env)) {
+      return errorResponse(401, 'Unauthorized — authenticate via Cloudflare Access, or provide MCP_CLIENT_SECRET via `Authorization: Bearer <secret>` header or `/mcp/<secret>` path.');
     }
 
     // GET — open the server->client SSE stream the client attaches to.
