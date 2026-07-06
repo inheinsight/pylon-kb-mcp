@@ -221,8 +221,7 @@ async function handleRpc(req: JsonRpcRequest, env: Env): Promise<JsonRpcSuccess 
         baseUrl: env.PYLON_BASE_URL,
       });
       try {
-        // Worker runtime can't run Playwright; screenshot tools fail with a clear error from handler.
-        const result = await executeTool({ client, browser: null }, name, args);
+        const result = await executeTool({ client }, name, args);
         return jsonRpcSuccess(id, {
           content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
         });
