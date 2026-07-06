@@ -10,31 +10,13 @@ import {
 import { PylonKBClient } from './pylon-kb-client.js';
 import { tools } from './tools.js';
 import { executeTool, type ToolContext } from './handler.js';
-import { BrowserSession } from './browser/session.js';
 
 const PYLON_API_TOKEN = process.env.PYLON_API_TOKEN;
 const PYLON_BASE_URL = process.env.PYLON_BASE_URL;
 
-const ONBOARDED_DASHBOARD_URL = process.env.ONBOARDED_DASHBOARD_URL;
-const ONBOARDED_LOGIN_EMAIL = process.env.ONBOARDED_LOGIN_EMAIL;
-const ONBOARDED_LOGIN_PASSWORD = process.env.ONBOARDED_LOGIN_PASSWORD;
-const PLAYWRIGHT_USER_DATA_DIR = process.env.PLAYWRIGHT_USER_DATA_DIR;
-const PLAYWRIGHT_HEADLESS = process.env.PLAYWRIGHT_HEADLESS !== 'false';
-
 let client: PylonKBClient | null = null;
 if (PYLON_API_TOKEN) {
   client = new PylonKBClient({ apiToken: PYLON_API_TOKEN, baseUrl: PYLON_BASE_URL });
-}
-
-let browser: BrowserSession | null = null;
-if (ONBOARDED_DASHBOARD_URL && ONBOARDED_LOGIN_EMAIL && ONBOARDED_LOGIN_PASSWORD) {
-  browser = new BrowserSession({
-    dashboardUrl: ONBOARDED_DASHBOARD_URL,
-    loginEmail: ONBOARDED_LOGIN_EMAIL,
-    loginPassword: ONBOARDED_LOGIN_PASSWORD,
-    userDataDir: PLAYWRIGHT_USER_DATA_DIR,
-    headless: PLAYWRIGHT_HEADLESS,
-  });
 }
 
 const server = new Server(
@@ -59,7 +41,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
     };
   }
 
-  const ctx: ToolContext = { client, browser };
+  const ctx: ToolContext = { client };
 
   try {
     const result = await executeTool(
@@ -81,9 +63,6 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 
 async function shutdown(signal: string): Promise<void> {
   console.error(`pylon-kb-mcp: received ${signal}, shutting down`);
-  if (browser) {
-    await browser.close();
-  }
   process.exit(0);
 }
 process.on('SIGINT', () => void shutdown('SIGINT'));
@@ -93,13 +72,6 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error('pylon-kb-mcp-server running on stdio');
-  if (browser) {
-    console.error('pylon-kb-mcp: screenshot tools enabled');
-  } else {
-    console.error(
-      'pylon-kb-mcp: screenshot tools DISABLED — set ONBOARDED_DASHBOARD_URL, ONBOARDED_LOGIN_EMAIL, ONBOARDED_LOGIN_PASSWORD to enable',
-    );
-  }
 }
 
 main().catch((err) => {
