@@ -6,6 +6,15 @@ account_id = "95395f7c1d8292af713ec2bc73b9e4b9"
 [observability]
 enabled = true
 
+# Cloudflare Access (managed OAuth) JWT validation. These MUST live here:
+# `wrangler deploy` replaces dashboard-set vars with this file's [vars], so
+# anything configured only in the dashboard is wiped on the next deploy.
+# ACCESS_AUD is the Access application's AUD tag (Zero Trust > Access controls
+# > Applications > pylon-kb-mcp > Additional settings).
+[vars]
+ACCESS_AUD = "c0f770ff3d16bf3da5842349d2e210297d0f1dc05c5ae477e7206b604d051362"
+ACCESS_TEAM_DOMAIN = "https://onboardedz.cloudflareaccess.com"
+
 # Secrets are set out-of-band via `wrangler secret put`:
 #   PYLON_API_TOKEN     — Pylon bearer token shared by the team
 #   MCP_CLIENT_SECRET   — random string clients (Cowork, Claude Code) must present
